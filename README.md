@@ -4,18 +4,20 @@
 
 do the following steps:
 
-1. create a venv with `python -m venv venv`
-2. activate with `source ./venv/bin/activate`
-3. install requirements with `pip install -r requirements.txt`
-4. start server with `python main.py`
+1. `cd server`
+2. create a venv with `python -m venv venv`
+3. activate with `source ./venv/bin/activate`
+4. install requirements with `pip install -r requirements.txt`
+5. start server with `python main.py`
 
 
 ## the app 
 
 do the following steps:
 
-1. install deps with `npm install`
-2. run locally with `npm start`
+1. `cd app`
+2. install deps with `npm install`
+3. run locally with `npm start`
 
 ## the db
 

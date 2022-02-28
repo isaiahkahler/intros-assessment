@@ -5,7 +5,7 @@
 do the following steps:
 
 1. `cd server`
-2. create a venv with `python -m venv venv`
+2. create a venv with `python -m venv venv` (sometimes its `python3` on mac)
 3. activate with `source ./venv/bin/activate`
 4. install requirements with `pip install -r requirements.txt`
 5. start server with `python main.py`

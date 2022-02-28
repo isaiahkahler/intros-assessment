@@ -48,9 +48,9 @@ def convert_rows(obj):
 
 class GetItemsHandler(tornado.web.RequestHandler):
     def prepare(self):
-            header = "Content-Type"
-            body = "application/json"
-            self.set_header(header, body)
+        header = "Content-Type"
+        body = "application/json"
+        self.set_header(header, body)
 
     def get(self):
         with database.cursor() as cursor:
@@ -63,22 +63,38 @@ class GetItemsHandler(tornado.web.RequestHandler):
             # return the list items
             self.write(str(json.dumps(result)))
 
+    def options(self, *args, **kwargs):
+        self.set_header("Access-Control-Allow-Origin", "*")
+        self.set_header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
+        self.set_header('Access-Control-Allow-Credentials', 'true')
+        self.add_header('Vary', 'Origin')
+
 class NewItemHandler(tornado.web.RequestHandler):
+
     def post(self):
         # check for correct arguments, error if something is wrong
         body = tornado.escape.json_decode(self.request.body)
-        if 'contents' not in body or 'timestamp' not in body:
+        if 'contents' not in body:
             raise tornado.web.HTTPError(400)
         contents = body['contents']
-        timestamp = body['timestamp']
+        timestamp = datetime.now().isoformat()
 
         # create the entry in the DB
         with database.cursor() as cursor:
             sql = "INSERT INTO list_items(item_id, contents, timestamp, completed) VALUES(%s, %s, %s, %s)"
-            cursor.execute(sql, (shortuuid.uuid(), contents, timestamp, 0))
+            cursor.execute(sql, (shortuuid.uuid(), contents, timestamp, 0))       
+    
+    def get(self):
+        self.write("the new item endpoint")
             
+    def options(self, *args, **kwargs):
+        self.set_header("Access-Control-Allow-Origin", "*")
+        self.set_header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
+        self.set_header('Access-Control-Allow-Credentials', 'true')
+        self.add_header('Vary', 'Origin')
 
 class EditItemHandler(tornado.web.RequestHandler):
+
     def post(self):
         # check for correct arguments, error if something is wrong
         body = tornado.escape.json_decode(self.request.body)
@@ -94,7 +110,18 @@ class EditItemHandler(tornado.web.RequestHandler):
             sql = "UPDATE list_items SET contents=%s, last_edited=%s, completed=%s WHERE item_id = %s"
             cursor.execute(sql, (contents, last_edited, completed, item_id))
 
+    def get(self):
+        self.write("the edit item endpoint")
+            
+    def options(self, *args, **kwargs):
+        self.set_header("Access-Control-Allow-Origin", "*")
+        self.set_header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
+        self.set_header('Access-Control-Allow-Credentials', 'true')
+        self.add_header('Vary', 'Origin')
+
+
 class DeleteItemHandler(tornado.web.RequestHandler):
+
     def delete(self):
          # check for correct arguments, error if something is wrong
         body = tornado.escape.json_decode(self.request.body)
@@ -106,6 +133,38 @@ class DeleteItemHandler(tornado.web.RequestHandler):
         with database.cursor() as cursor:
             sql = "DELETE FROM list_items WHERE item_id = %s"
             cursor.execute(sql, (item_id))
+            
+    def get(self):
+        self.write("the delete item endpoint")
+            
+    def options(self, *args, **kwargs):
+        self.set_header("Access-Control-Allow-Origin", "*")
+        self.set_header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
+        self.set_header('Access-Control-Allow-Credentials', 'true')
+        self.add_header('Vary', 'Origin')
+
+class CheckItemHandler(tornado.web.RequestHandler):
+
+    def post(self):
+         # check for correct arguments, error if something is wrong
+        body = tornado.escape.json_decode(self.request.body)
+        if 'item_id' not in body:
+            raise tornado.web.HTTPError(400)
+        item_id = body['item_id']
+
+        # toggle the entry in the DB
+        with database.cursor() as cursor:
+            sql = "UPDATE list_items SET completed = !completed WHERE item_id = %s"
+            cursor.execute(sql, (item_id))
+            
+    def get(self):
+        self.write("the check item endpoint")
+            
+    def options(self, *args, **kwargs):
+        self.set_header("Access-Control-Allow-Origin", "*")
+        self.set_header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
+        self.set_header('Access-Control-Allow-Credentials', 'true')
+        self.add_header('Vary', 'Origin')
 
 def make_app():
     return tornado.web.Application([
@@ -114,21 +173,11 @@ def make_app():
         (r"/api/new-item", NewItemHandler),
         (r"/api/edit-item", EditItemHandler),
         (r"/api/delete-item", DeleteItemHandler),
+        (r"/api/check-item", CheckItemHandler),
         ])
 
 
-def options(self, *args, **kwargs):
-    """
-    Default OPTIONS request response for all handlers
-    This overrides CORS so that the UI is test-able
-    NOTE: ONLY USE LOCALLY!
-    """
-    # if running locally, disable CORS protections
-    if ApiHandler.localhost:
-        self.set_header("Access-Control-Allow-Origin", "*")
-        self.set_header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
-        self.set_header('Access-Control-Allow-Credentials', 'true')
-        self.add_header('Vary', 'Origin')
+
 
 
 if __name__ == "__main__":
